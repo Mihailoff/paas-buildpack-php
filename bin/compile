@@ -47,9 +47,14 @@ echo "-----> Bundling PHP version $PHP_VERSION"
 curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
 chmod +x phpbrew
 ./phpbrew init
+echo "source ~/.phpbrew/bashrc" >> ~/.bashrc
+mkdir -p ~/.phpbrew/bin
+mv ./phpbrew ~/.phpbrew/bin/phpbrew
+# after init phpbrew should be invoked as a bash function, phpbrew executable is invoked somewhere inside
+PATH=$PATH:~/.phpbrew/bin/
 source ~/.phpbrew/bashrc
-./phpbrew install $PHP_VERSION +default +dbs +mb +apxs2=/app/apache/bin/apxs
-./phpbrew switch $PHP_VERSION
+phpbrew install $PHP_VERSION +default +dbs +mb +apxs2=/app/apache/bin/apxs
+phpbrew switch $PHP_VERSION
 
 # update config files
 cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
