@@ -15,7 +15,7 @@ heroku_rev='-2'
 MCRYPT_VERSION="2.5.8"
 APACHE_VERSION="2.2.25"
 APACHE_PATH="apache"
-PHP_VERSION="5.3.27"
+PHP_VERSION="5.4.32"
 PHP_PATH="php"
 
 BIN_DIR=$(dirname $0)
@@ -30,7 +30,7 @@ cd $BUILD_DIR
 
 # move app things to www
 mkdir -p $CACHE_DIR/www
-#mv * $CACHE_DIR/www
+mv * $CACHE_DIR/www
 mv $CACHE_DIR/www .
 
 # keep Procfile
@@ -46,19 +46,18 @@ curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
 echo "-----> Bundling PHP version $PHP_VERSION"
 curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
 chmod +x phpbrew
-mkdir -p bin
-mv phpbrew bin/phpbrew
-phpbrew init
+./phpbrew init
 source ~/.phpbrew/bashrc
-phpbrew install 5.4.32 +default +dbs +mb +apxs2
-phpbrew switch 5.4.32
+./phpbrew install $PHP_VERSION +default +dbs +mb +apxs2=/app/apache/bin/apxs
+./phpbrew switch $PHP_VERSION
 
 # update config files
 cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
 cp $LP_DIR/conf/php.ini php
 
 # make php available on bin
-#ln -s /app/php/bin/php bin/php
+mkdir -p bin
+ln -s ~/.phpbrew/php/php-$PHP_VERSION/bin/php bin/php
 
 cat >>boot.sh <<EOF
 for var in \`env|cut -f1 -d=\`; do
