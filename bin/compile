@@ -44,15 +44,12 @@ curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
 
 # brew the PHP ;)
 echo "-----> Bundling PHP version $PHP_VERSION"
-mkdir -p $CACHE_DIR/.phpbrew
 curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
 chmod +x phpbrew
-cp -r $CACHE_DIR/.phpbrew/ ~/
 ./phpbrew init
 source ~/.phpbrew/bashrc
 ./phpbrew install $PHP_VERSION +default +dbs +mb +apxs2=/app/apache/bin/apxs
 ./phpbrew switch $PHP_VERSION
-cp -rf ~/.phpbrew/ $CACHE_DIR
 
 # update config files
 cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
