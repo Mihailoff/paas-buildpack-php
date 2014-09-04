@@ -16,7 +16,6 @@ MCRYPT_VERSION="2.5.8"
 APACHE_VERSION="2.2.25"
 APACHE_PATH="apache"
 PHP_VERSION="5.4.32"
-PHP_PATH="php"
 
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
@@ -35,7 +34,7 @@ mv $CACHE_DIR/www .
 
 # keep Procfile
 if [ -f www/Procfile ]; then
-  cp www/Procfile .
+  mv www/Procfile .
 fi
 
 APACHE_URL="https://heroku-buildpack-php.s3.amazonaws.com/apache-""$APACHE_VERSION""$heroku_rev"".tar.gz"
@@ -55,6 +54,7 @@ PATH=$PATH:~/.phpbrew/bin/
 source ~/.phpbrew/bashrc
 phpbrew install $PHP_VERSION +default +dbs +mb +apxs2=/app/apache/bin/apxs
 phpbrew switch $PHP_VERSION
+PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
 
 # update config files
 cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
@@ -72,8 +72,8 @@ touch /app/apache/logs/error_log
 touch /app/apache/logs/access_log
 tail -F /app/apache/logs/error_log &
 tail -F /app/apache/logs/access_log &
-export LD_LIBRARY_PATH=/app/php/lib/php
-export PHP_INI_SCAN_DIR=/app/www
+export LD_LIBRARY_PATH=$PHP_DIR/lib/php
+export PHP_INI_SCAN_DIR=$PHP_DIR/etc
 echo "Launching apache"
 exec /app/apache/bin/httpd -DNO_DETACH
 EOF
