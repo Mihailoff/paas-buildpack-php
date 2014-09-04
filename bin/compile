@@ -35,7 +35,7 @@ mv $CACHE_DIR/www .
 
 # keep Procfile
 if [ -f www/Procfile ]; then
-  mv www/Procfile .
+  cp www/Procfile .
 fi
 
 APACHE_URL="https://heroku-buildpack-php.s3.amazonaws.com/apache-""$APACHE_VERSION""$heroku_rev"".tar.gz"
