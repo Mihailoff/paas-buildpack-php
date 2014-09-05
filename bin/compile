@@ -52,7 +52,7 @@ mv ./phpbrew ~/.phpbrew/bin/phpbrew
 # after init phpbrew should be invoked as a bash function, phpbrew executable is invoked somewhere inside
 PATH=$PATH:~/.phpbrew/bin/
 source ~/.phpbrew/bashrc
-phpbrew install $PHP_VERSION +default +dbs +mb +apxs2=/app/apache/bin/apxs
+phpbrew install $PHP_VERSION +default +apxs2=/app/apache/bin/apxs
 phpbrew switch $PHP_VERSION
 PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
 
