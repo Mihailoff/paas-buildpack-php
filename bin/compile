@@ -55,7 +55,7 @@ else
 fi
 
 # Detect phpbrew variants (php compilation options)
-if [[ ! -z "$PHPBREW_VARIANTS" ]]; then
+if [[ -z "$PHPBREW_VARIANTS" ]]; then
   echo "Notice: Variable PHPBREW_VARIANTS is not set, falling back to '+default' variant"
   PHPBREW_VARIANTS='+default'
 fi
@@ -66,7 +66,7 @@ mv ./phpbrew ~/.phpbrew/bin/phpbrew
 # after init phpbrew should be invoked as a bash function, phpbrew executable is invoked somewhere inside
 PATH=$PATH:~/.phpbrew/bin/
 source ~/.phpbrew/bashrc
-phpbrew install --make-jobs=4 -q $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
+phpbrew install -j 4 $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
 phpbrew switch $PHP_VERSION
 PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
 cp -r ~/.phpbrew $CACHE_DIR
