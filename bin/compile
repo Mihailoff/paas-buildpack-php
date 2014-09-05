@@ -44,7 +44,7 @@ cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
 
 # brew the PHP ;)
 echo "-----> Brewing PHP version $PHP_VERSION"
-if [ -d $CACHE_DIR/.phpbrew ]; then 
+if [[ -d $CACHE_DIR/.phpbrew && "$(ls -A $CACHE_DIR/.phpbrew)" ]]; then
   echo "Cached phpbrew directory detected"
   mv $CACHE_DIR/.phpbrew ~/
 else
