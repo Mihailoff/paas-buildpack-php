@@ -4,6 +4,10 @@
 # fail fast
 set -e
 
+indent() {
+  sed -u 's/^/       /'
+}
+
 # Heroku Revision.
 #
 # Affixed to all vendored binary output to represent changes to the
@@ -45,10 +49,10 @@ cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
 # brew the PHP ;)
 echo "-----> Brewing PHP version $PHP_VERSION"
 if [[ -d $CACHE_DIR/.phpbrew && "$(ls -A $CACHE_DIR/.phpbrew)" ]]; then
-  echo "Cached phpbrew directory detected"
+  echo "Cached phpbrew directory detected" | indent
   mv $CACHE_DIR/.phpbrew ~/
 else
-  echo "First time brewing PHP"
+  echo "First time brewing PHP" | indent
   curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
   chmod +x phpbrew
   ./phpbrew init
@@ -58,7 +62,7 @@ fi
 
 # Detect phpbrew variants (php compilation options)
 if [[ -z "$PHPBREW_VARIANTS" ]]; then
-  echo "Notice: Variable PHPBREW_VARIANTS is not set, falling back to '+default' variant"
+  echo "Notice: Variable PHPBREW_VARIANTS is not set, falling back to '+default' variant" | indent
   PHPBREW_VARIANTS='+default'
 fi
 
@@ -96,3 +100,5 @@ chmod +x boot.sh
 
 # clean the cache
 #rm -rf $CACHE_DIR
+
+echo "Done" | indent
