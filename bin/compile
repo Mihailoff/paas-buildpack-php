@@ -40,12 +40,20 @@ fi
 APACHE_URL="https://heroku-buildpack-php.s3.amazonaws.com/apache-""$APACHE_VERSION""$heroku_rev"".tar.gz"
 echo "-----> Bundling Apache version $APACHE_VERSION"
 curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
+cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
 
 # brew the PHP ;)
-echo "-----> Bundling PHP version $PHP_VERSION"
-curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
-chmod +x phpbrew
-./phpbrew init
+echo "-----> Brewing PHP version $PHP_VERSION"
+if [ -d $CACHE_DIR/.phpbrew ]; then 
+  echo "Cached phpbrew directory detected"
+  mv $CACHE_DIR/.phpbrew ~/
+else
+  echo "First time brewing PHP"
+  curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
+  chmod +x phpbrew
+  ./phpbrew init
+fi
+
 echo "source ~/.phpbrew/bashrc" >> ~/.bashrc
 mkdir -p ~/.phpbrew/bin
 mv ./phpbrew ~/.phpbrew/bin/phpbrew
@@ -55,14 +63,14 @@ source ~/.phpbrew/bashrc
 phpbrew install $PHP_VERSION +default +apxs2=/app/apache/bin/apxs
 phpbrew switch $PHP_VERSION
 PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
+cp -r ~/.phpbrew $CACHE_DIR
 
 # update config files
-cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
 cp $LP_DIR/conf/php.ini php
 
 # make php available on bin
 mkdir -p bin
-ln -s ~/.phpbrew/php/php-$PHP_VERSION/bin/php bin/php
+ln -s $PHP_DIR/bin/php bin/php
 
 cat >>boot.sh <<EOF
 for var in \`env|cut -f1 -d=\`; do
@@ -81,4 +89,4 @@ EOF
 chmod +x boot.sh
 
 # clean the cache
-rm -rf $CACHE_DIR
+#rm -rf $CACHE_DIR
