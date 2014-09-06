@@ -64,10 +64,20 @@ fi
 PATH=$PATH:~/.phpbrew/bin/
 echo "source ~/.phpbrew/bashrc" >> ~/.bashrc
 source ~/.phpbrew/bashrc
+
 # Detect phpbrew variants (php compilation options)
 source $LP_DIR/conf/phpbrew_variants.sh
-phpbrew install -j 4 $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
-phpbrew switch $PHP_VERSION
+
+# should PHP be compiled again?
+PHPBREW_VARIANTS_FILE=~/.phpbrew/build/php-$PHP_VERSION/phpbrew_variants
+if [[ ! -f ~/.phpbrew/php/php-$PHP_VERSION/bin/php ]] || [[ ! -f "$PHPBREW_VARIANTS_FILE" ]] || [[ $(cat "$PHPBREW_VARIANTS_FILE") != "$PHPBREW_VARIANTS" ]]; then
+  phpbrew install -j 4 $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
+  phpbrew switch $PHP_VERSION
+  echo "$PHPBREW_VARIANTS" > $PHPBREW_VARIANTS_FILE
+else
+  echo "Found already compiled PHP-$PHP_VERSION $PHPBREW_VARIANTS" | indent
+fi
+
 PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
 cp -r ~/.phpbrew $CACHE_DIR
 
