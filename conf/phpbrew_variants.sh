@@ -1,1 +1,1 @@
-PHPBREW_VARIANTS="+default +dbs +mb +gd=shared"
+PHPBREW_VARIANTS="+default +dbs +mb +iconv +gd=shared"
