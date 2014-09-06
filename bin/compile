@@ -31,6 +31,11 @@ shopt -s dotglob
 
 cd $BUILD_DIR
 
+# clear the cache if necessary
+if [ -f $LP_DIR/Cacheignore ]; then
+  rm -rf $CACHE_DIR
+fi
+
 # move app things to www
 mkdir -p $CACHE_DIR/www
 mv * $CACHE_DIR/www
