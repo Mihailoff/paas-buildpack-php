@@ -41,9 +41,14 @@ if [ -f www/Procfile ]; then
   mv www/Procfile .
 fi
 
-APACHE_URL="https://heroku-buildpack-php.s3.amazonaws.com/apache-""$APACHE_VERSION""$heroku_rev"".tar.gz"
-echo "-----> Bundling Apache version $APACHE_VERSION"
-curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
+if [ -d $CACHE_DIR/$APACHE_PATH ]; then
+  echo "Cached Apache detected" | indent
+  cp -r $CACHE_DIR/$APACHE_PATH $APACHE_PATH
+else
+  APACHE_URL="https://heroku-buildpack-php.s3.amazonaws.com/apache-""$APACHE_VERSION""$heroku_rev"".tar.gz"
+  echo "-----> Bundling Apache version $APACHE_VERSION"
+  curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
+fi
 cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
 
 # brew the PHP ;)
@@ -79,7 +84,10 @@ else
 fi
 
 PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
+
+# cache data
 cp -r ~/.phpbrew $CACHE_DIR
+cp -r $APACHE_PATH $CACHE_DIR/$APACHE_PATH
 
 # update config files
 cp $LP_DIR/conf/php.ini php
@@ -103,8 +111,5 @@ exec /app/apache/bin/httpd -DNO_DETACH
 EOF
 
 chmod +x boot.sh
-
-# clean the cache
-#rm -rf $CACHE_DIR
 
 echo "Done" | indent
