@@ -95,7 +95,9 @@ else
   echo "Found already compiled PHP-$PHP_VERSION $PHPBREW_VARIANTS" | indent
 fi
 
-PHP_DIR=`cd ~/.phpbrew/php/php-$PHP_VERSION && pwd`
+# copy from home to the app
+cp -r ~/.phpbrew .
+PHP_DIR=`cd ./.phpbrew/php/php-$PHP_VERSION && pwd`
 
 # cache data
 cp -r ~/.phpbrew $CACHE_DIR
@@ -123,5 +125,9 @@ exec /app/apache/bin/httpd -DNO_DETACH
 EOF
 
 chmod +x boot.sh
+
+# cleaning
+rm -rf $CACHE_DIR/www
+rm -rf ~/.phpbrew
 
 echo "Done" | indent
