@@ -95,9 +95,8 @@ else
   echo "Found already compiled PHP-$PHP_VERSION $PHPBREW_VARIANTS" | indent
 fi
 
-# copy from home to the app
+# copy from build home to the app
 cp -r ~/.phpbrew .
-PHP_DIR=`cd ./.phpbrew/php/php-$PHP_VERSION && pwd`
 
 # cache data
 cp -r ~/.phpbrew $CACHE_DIR
@@ -105,6 +104,8 @@ cp -r $APACHE_PATH $CACHE_DIR/$APACHE_PATH
 
 # update config files
 cp $LP_DIR/conf/php.ini php
+
+PHP_DIR=/app/.phpbrew/php/php-$PHP_VERSION
 
 # make php available on bin
 mkdir -p bin
