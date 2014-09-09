@@ -88,7 +88,7 @@ source $LP_DIR/conf/phpbrew_variants.sh
 # should PHP be compiled again?
 PHPBREW_VARIANTS_FILE=~/.phpbrew/build/php-$PHP_VERSION/phpbrew_variants
 if [[ ! -f ~/.phpbrew/php/php-$PHP_VERSION/bin/php ]] || [[ ! -f "$PHPBREW_VARIANTS_FILE" ]] || [[ $(cat "$PHPBREW_VARIANTS_FILE") != "$PHPBREW_VARIANTS" ]] || [[ ! -f $APACHE_COMPILED_PHP_MODULE_FILE ]]; then
-  phpbrew install -j 4 $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
+  phpbrew install --production -j 4 $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
   phpbrew switch $PHP_VERSION
   echo "$PHPBREW_VARIANTS" > $PHPBREW_VARIANTS_FILE
 else
