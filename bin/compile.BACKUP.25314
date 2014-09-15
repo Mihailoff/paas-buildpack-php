@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+indent() {
+  sed -u 's/^/       /'
+}
+
+# Heroku Revision.
+#
+# Affixed to all vendored binary output to represent changes to the
+# compilation environment without a change to the upstream version,
+# e.g. PHP 5.3.27 without, and then subsequently with, libmcrypt.
+heroku_rev='-2'
+
+# config
+MCRYPT_VERSION="2.5.8"
+APACHE_VERSION="2.2.25"
+APACHE_PATH="apache"
+PHP_VERSION="5.4.32"
+
+BIN_DIR=$(dirname $0)
+BUILD_DIR=$1
+CACHE_DIR=$2
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+
+# include .files when moving things around
+shopt -s dotglob
+
+cd $BUILD_DIR
+
+# clear the cache if necessary
+if [ -f $LP_DIR/Cacheignore ]; then
+  rm -rf $CACHE_DIR
+fi
+
+# move app things to www
+mkdir -p $CACHE_DIR/www
+mv * $CACHE_DIR/www
+mv $CACHE_DIR/www .
+
+# keep Procfile
+if [ -f www/Procfile ]; then
+  mv www/Procfile .
+fi
+
+APACHE_COMPILED_PHP_MODULE_FILE=$APACHE_PATH/modules/libphp$PHP_VERSION.so
+if [ -d $CACHE_DIR/$APACHE_PATH ]; then
+  echo "Cached Apache detected" | indent
+  cp -r $CACHE_DIR/$APACHE_PATH $APACHE_PATH
+  cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
+  if [ -f $APACHE_COMPILED_PHP_MODULE_FILE ]; then
+    echo "LoadModule php5_module $APACHE_COMPILED_PHP_MODULE_FILE" >> $APACHE_PATH/conf/httpd.conf
+  else
+    echo "Warning: desired PHP-$PHP_VERSION not found in cached apache" | indent
+  fi
+else
+  APACHE_URL="https://heroku-buildpack-php.s3.amazonaws.com/apache-""$APACHE_VERSION""$heroku_rev"".tar.gz"
+  echo "-----> Bundling Apache version $APACHE_VERSION"
+  curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
+  cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
+fi
+
+# brew the PHP ;)
+echo "-----> Brewing PHP version $PHP_VERSION"
+if [[ -d $CACHE_DIR/.phpbrew ]]; then
+  echo "Cached phpbrew directory detected" | indent
+  mv $CACHE_DIR/.phpbrew ~/
+else
+  echo "First time brewing PHP" | indent
+  curl --silent -L https://github.com/phpbrew/phpbrew/blob/1.13.2/phpbrew?raw=true -o phpbrew
+  chmod +x phpbrew
+  ./phpbrew init
+  mkdir -p ~/.phpbrew/bin
+  mv ./phpbrew ~/.phpbrew/bin/phpbrew
+fi
+
+# after init phpbrew should be invoked as a bash function, phpbrew executable is invoked somewhere inside
+PATH=$PATH:~/.phpbrew/bin/
+echo "source ~/.phpbrew/bashrc" >> ~/.bashrc
+source ~/.phpbrew/bashrc
+
+# Detect phpbrew variants (php compilation options)
+source $LP_DIR/conf/phpbrew_variants.sh
+
+# should PHP be compiled again?
+PHPBREW_VARIANTS_FILE=~/.phpbrew/build/php-$PHP_VERSION/phpbrew_variants
+if [[ ! -f ~/.phpbrew/php/php-$PHP_VERSION/bin/php ]] || [[ ! -f "$PHPBREW_VARIANTS_FILE" ]] || [[ $(cat "$PHPBREW_VARIANTS_FILE") != "$PHPBREW_VARIANTS" ]] || [[ ! -f $APACHE_COMPILED_PHP_MODULE_FILE ]]; then
+  phpbrew install -j 4 $PHP_VERSION +apxs2=/app/apache/bin/apxs $PHPBREW_VARIANTS
+  phpbrew switch $PHP_VERSION
+  echo "$PHPBREW_VARIANTS" > $PHPBREW_VARIANTS_FILE
+else
+  echo "Found already compiled PHP-$PHP_VERSION $PHPBREW_VARIANTS" | indent
+fi
+
+# copy from build home to the app
+cp -r ~/.phpbrew .
+
+# cache data
+cp -r ~/.phpbrew $CACHE_DIR
+cp -r $APACHE_PATH $CACHE_DIR/$APACHE_PATH
+
+# update config files
+cp $LP_DIR/conf/php.ini php
+
+PHP_DIR=/app/.phpbrew/php/php-$PHP_VERSION
+
+# make php available on bin
+mkdir -p bin
+ln -s $PHP_DIR/bin/php bin/php
+
+cat >>boot.sh <<EOF
+for var in \`env|cut -f1 -d=\`; do
+  echo "PassEnv \$var" >> /app/apache/conf/httpd.conf;
+done
+ln -s /app/.phpbrew ~/.phpbrew
+touch /app/apache/logs/error_log
+touch /app/apache/logs/access_log
+tail -F /app/apache/logs/error_log &
+tail -F /app/apache/logs/access_log &
+export LD_LIBRARY_PATH=$PHP_DIR/lib/php
+export PHP_INI_SCAN_DIR=$PHP_DIR/etc
+echo "Launching apache"
+exec /app/apache/bin/httpd -DNO_DETACH
+EOF
+
+chmod +x boot.sh
+
+<<<<<<< Updated upstream
+# cleaning
+rm -rf $CACHE_DIR/www
+rm -rf ~/.phpbrew
+
+echo "Done" | indent
+=======
+echo "Buildpack compilation stage is done" | indent
+>>>>>>> Stashed changes
